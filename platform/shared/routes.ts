@@ -249,6 +249,7 @@ export const RouteId = {
   ForkSharedConversation: "forkSharedConversation",
   GetChatModels: "getChatModels",
   SyncChatModels: "syncChatModels",
+  SyncChatModelsFull: "syncChatModelsFull",
 
   // Chat API Key Routes
   GetChatApiKeys: "getChatApiKeys",

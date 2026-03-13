@@ -7,6 +7,7 @@ import {
   Loader2,
   Pencil,
   RefreshCw,
+  RotateCcw,
   Search,
   Server,
 } from "lucide-react";
@@ -31,15 +32,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   type ModelWithApiKeys,
   useModelsWithApiKeys,
 } from "@/lib/chat-models.query";
-import { useSyncChatModels } from "@/lib/chat-settings.query";
+import { useSyncChatModels, useSyncChatModelsFull } from "@/lib/chat-settings.query";
 import { EditModelDialog } from "./edit-model-dialog";
 
 export function ProviderSettingsModels() {
   const { data: models = [], isPending, refetch } = useModelsWithApiKeys();
   const syncModelsMutation = useSyncChatModels();
+  const syncModelsFullMutation = useSyncChatModelsFull();
   const [search, setSearch] = useState("");
   const [apiKeyFilter, setApiKeyFilter] = useState<string>("all");
   const [editingModel, setEditingModel] = useState<ModelWithApiKeys | null>(
@@ -87,6 +94,11 @@ export function ProviderSettingsModels() {
     await syncModelsMutation.mutateAsync();
     await refetch();
   }, [syncModelsMutation, refetch]);
+
+  const handleFullRefresh = useCallback(async () => {
+    await syncModelsFullMutation.mutateAsync();
+    await refetch();
+  }, [syncModelsFullMutation, refetch]);
 
   const columns: ColumnDef<ModelWithApiKeys>[] = useMemo(
     () => [
@@ -287,16 +299,35 @@ export function ProviderSettingsModels() {
                 models and capabilities from providers.
               </p>
             </div>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={syncModelsMutation.isPending}
-            >
-              <RefreshCw
-                className={`h-4 w-4 mr-2 ${syncModelsMutation.isPending ? "animate-spin" : ""}`}
-              />
-              Refresh models
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={syncModelsMutation.isPending || syncModelsFullMutation.isPending}
+              >
+                <RefreshCw
+                  className={`h-4 w-4 mr-2 ${syncModelsMutation.isPending ? "animate-spin" : ""}`}
+                />
+                Refresh models
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    onClick={handleFullRefresh}
+                    disabled={syncModelsFullMutation.isPending || syncModelsMutation.isPending}
+                  >
+                    <RotateCcw
+                      className={`h-4 w-4 mr-2 ${syncModelsFullMutation.isPending ? "animate-spin" : ""}`}
+                    />
+                    Reset to defaults
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Re-fetch all model data and overwrite custom modifications
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           {models.length === 0 ? (
